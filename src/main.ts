@@ -339,6 +339,107 @@ function lawRow(name: string, status: string, tone: string, covers: string): HTM
   return h('li', {}, h('p', { class: 'meta' }, h('strong', {}, name), h('span', { class: `pill ${tone}` }, status)), h('p', { class: 'small' }, covers));
 }
 
+// ---- Check a price ----
+
+const USERSCRIPT_URL = './price-check.user.js';
+
+/** Links to the bookmarklet once its code has loaded (it's built next to the page). */
+function bookmarkletControls(): HTMLElement {
+  const wrap = h('div', { class: 'row' });
+  const status = h('p', { class: 'muted small' });
+  fetch('./price-check.js')
+    .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
+    .then((code) => {
+      const href = `javascript:${encodeURIComponent(code)}`;
+      const copy = h('button', { type: 'button', class: 'chip' }, 'Copy bookmarklet');
+      copy.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(href);
+          copy.textContent = 'Copied';
+        } catch {
+          copy.textContent = 'Copy failed';
+        }
+      });
+      // A javascript: link is the only way to hand over a bookmarklet; it never runs on this page.
+      const drag = h('a', { class: 'button', href, onclick: (e: Event) => e.preventDefault() }, 'Price check');
+      wrap.replaceChildren(drag, copy);
+    })
+    .catch(() => status.replaceChildren('The bookmarklet appears here once the site is published.'));
+  return h('div', {}, wrap, status);
+}
+
+function steps(...items: (string | Node)[][]): HTMLElement {
+  return h('ol', { class: 'steps' }, items.map((parts) => h('li', {}, parts)));
+}
+
+function priceCheckSection(): HTMLElement {
+  const install = (label: string) => h('a', { class: 'link', href: USERSCRIPT_URL }, label);
+  return h(
+    'section',
+    { id: 'price-check', 'aria-labelledby': 'price-check-h' },
+    h('h2', { id: 'price-check-h' }, 'Check a price'),
+    h(
+      'p',
+      {},
+      'Price check loads the product page you\'re on a second time as a signed-out visitor: same phone or computer, same internet connection, but no login or cookies. Then it tells you if the price is different.',
+    ),
+    h(
+      'ul',
+      { class: 'verdicts' },
+      h('li', {}, h('strong', {}, 'You\'re seeing more: '), 'something tied to your account or cookies is raising your price.'),
+      h('li', {}, h('strong', {}, 'You\'re seeing less: '), 'usually a member or loyalty price.'),
+      h('li', {}, h('strong', {}, 'The price keeps changing: '), 'two signed-out checks disagreed, so the store is testing prices or changing them with demand.'),
+    ),
+    h(
+      'details',
+      { class: 'install', open: true },
+      h('summary', {}, 'iPhone or iPad (Safari)'),
+      steps(
+        ['Install the free ', h('strong', {}, 'Userscripts'), ' app from the App Store and open it once.'],
+        ['In ', h('strong', {}, 'Settings → Apps → Safari → Extensions → Userscripts'), ', turn it on and allow it on every website.'],
+        ['In Safari, open ', install('Install Price check'), ', tap the ', h('strong', {}, 'aA'), ' (or puzzle-piece) button, choose ', h('strong', {}, 'Userscripts'), ' and tap ', h('strong', {}, 'Install'), '.'],
+        ['On a product page, tap the red ', h('strong', {}, 'Price check'), ' button in the corner.'],
+      ),
+      h('p', { class: 'muted small' }, 'Brave and other iPhone browsers can\'t run userscripts; use the bookmarklet below.'),
+    ),
+    h(
+      'details',
+      { class: 'install' },
+      h('summary', {}, 'Computer (Chrome, Firefox, Edge, Safari)'),
+      steps(
+        ['Install the free ', h('strong', {}, 'Tampermonkey'), ' or ', h('strong', {}, 'Violentmonkey'), ' extension for your browser.'],
+        ['Open ', install('Install Price check'), ' and confirm.'],
+        ['On a product page, click the red ', h('strong', {}, 'Price check'), ' button in the corner.'],
+      ),
+    ),
+    h(
+      'details',
+      { class: 'install' },
+      h('summary', {}, 'Any browser, no install (bookmarklet)'),
+      steps(
+        ['On a computer, drag the red ', h('strong', {}, 'Price check'), ' button below to your bookmarks bar.'],
+        ['On a phone, tap ', h('strong', {}, 'Copy bookmarklet'), ', bookmark any page, then edit that bookmark: name it "Price check" and replace its address with what you copied.'],
+        ['On a product page, open your bookmarks and tap ', h('strong', {}, 'Price check'), '. In Brave or Chrome you can also type "Price check" in the address bar and pick the bookmark.'],
+      ),
+      bookmarkletControls(),
+    ),
+    h(
+      'aside',
+      { class: 'myths' },
+      h('h3', {}, 'What it can\'t see'),
+      h(
+        'ul',
+        {},
+        h('li', {}, h('strong', {}, 'Apps. '), h('span', {}, 'Uber, Lyft and the Instacart and DoorDash apps can\'t be checked. Use a second quote from someone else\'s phone.')),
+        h('li', {}, h('strong', {}, 'Sites that hide prices until you sign in, '), h('span', {}, 'like Instacart\'s website, or that load prices later with scripts.')),
+        h('li', {}, h('strong', {}, 'Device and location pricing. '), h('span', {}, 'Both checks come from your device and connection. Compare on another device for those.')),
+        h('li', {}, h('strong', {}, 'Stores that block automated requests. '), h('span', {}, 'You\'ll see a message saying so.')),
+      ),
+    ),
+    h('p', { class: 'muted small' }, 'Private by design: nothing is sent to this site or anyone else. The only extra request goes to the store you\'re already on.'),
+  );
+}
+
 // ---- Page ----
 
 function stat(value: number, label: string): HTMLElement {
@@ -373,6 +474,7 @@ function render(root: HTMLElement): void {
         { 'aria-label': 'Sections' },
         [
           ['#what-you-can-do', 'What you can do'],
+          ['#price-check', 'Check a price'],
           ['#rights', 'Your rights'],
           ['#companies', 'Companies'],
           ['#laws', 'Laws'],
@@ -380,6 +482,7 @@ function render(root: HTMLElement): void {
       ),
     ),
     guideSection(companiesPart.show),
+    priceCheckSection(),
     rightsSection(),
     companiesPart.section,
     h(

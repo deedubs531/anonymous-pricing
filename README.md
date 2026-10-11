@@ -13,6 +13,11 @@ educational resource on it:
 - **Companies:** Instacart, Uber, Lyft, DoorDash, Target, Kroger, JetBlue, Tinder and others, tagged **Tested**
   (independent testers saw different prices), **Admitted** (the company disclosed or confirmed it) or
   **Investigated** (a regulator, lawmaker or lawsuit), with the company's response and sources.
+- **Check a price:** a free tool that loads the product page you're on again as a signed-out visitor
+  (same device and connection, no login or cookies) and tells you if your price is higher, lower, the
+  same, or changing on its own. Installs as a userscript (iPhone Safari via the Userscripts app,
+  Tampermonkey or Violentmonkey on a computer) or a bookmarklet in any browser. Nothing is sent
+  anywhere except the one extra request to the store.
 - **Laws** and **Behind the scenes** (the firms that sell pricing software).
 
 No accounts or tracking. The only thing stored is your chosen state, in your own browser.
@@ -23,6 +28,13 @@ No accounts or tracking. The only thing stored is your chosen state, in your own
 |---|---|
 | `src/data.ts` | Companies, evidence, laws, pricing vendors. Update `REVIEWED` when you recheck sources. |
 | `src/guide.ts` | Tips, "I'm about to…" scenarios, myths, states, Global Privacy Control states, where to report |
+| `checker/` | Price check: reading prices from structured data (`extract.ts`), the signed-out fetch (`check.ts`), verdicts (`compare.ts`), the on-page card (`ui.ts`) |
+| `scripts/build-checker.mjs` | Builds `price-check.js` (bookmarklet) and `price-check.user.js` (userscript) into `dist/` |
+
+Price check reads prices from the schema.org, microdata and Open Graph data stores publish for
+search engines, so it works on many retail and travel sites but not on ones that hide prices until
+you sign in. It checks twice signed out: if those two disagree, it reports that the price is
+changing on its own instead of blaming your data.
 
 Rules the tests enforce (`npm test`): every claim has an https source, dates are valid and not in
 the future, every tip points at a company in the database, every scenario uses real tips, and every

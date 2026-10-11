@@ -595,3 +595,46 @@ nav a {
 .company {
   scroll-margin-top: 1rem;
 }
+
+/* Check a price */
+
+.verdicts {
+  padding-left: 1.2rem;
+  color: var(--ink-2);
+}
+
+.verdicts li + li {
+  margin-top: 0.3rem;
+}
+
+.install {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  margin-top: 0.6rem;
+}
+
+.install summary {
+  color: var(--ink);
+}
+
+.steps {
+  padding-left: 1.3rem;
+  margin: 0.5rem 0;
+}
+
+.steps li + li {
+  margin-top: 0.4rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.row .button {
+  margin-top: 0;
+}
