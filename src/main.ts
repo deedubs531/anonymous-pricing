@@ -16,6 +16,7 @@ import {
   tipsFor,
   type Filter,
 } from './logic';
+import { detectPlatform, PLATFORM_LABELS, type Platform } from './platform';
 import type { Company, EvidenceKind, Sector, Source, Tip } from './types';
 import './styles.css';
 
@@ -342,38 +343,97 @@ function lawRow(name: string, status: string, tone: string, covers: string): HTM
 // ---- Check a price ----
 
 const USERSCRIPT_URL = './price-check.user.js';
+const USERSCRIPTS_APP = 'https://apps.apple.com/app/id1463298887';
 
-/** Links to the bookmarklet once its code has loaded (it's built next to the page). */
-function bookmarkletControls(): HTMLElement {
-  const wrap = h('div', { class: 'row' });
-  const status = h('p', { class: 'muted small' });
-  fetch('./price-check.js')
+/** The bookmarklet is built next to the page; load its code once and share it. */
+let bookmarklet: Promise<string> | undefined;
+function bookmarkletHref(): Promise<string> {
+  bookmarklet ??= fetch('./price-check.js')
     .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
-    .then((code) => {
-      const href = `javascript:${encodeURIComponent(code)}`;
-      const copy = h('button', { type: 'button', class: 'chip' }, 'Copy bookmarklet');
-      copy.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(href);
-          copy.textContent = 'Copied';
-        } catch {
-          copy.textContent = 'Copy failed';
-        }
-      });
-      // A javascript: link is the only way to hand over a bookmarklet; it never runs on this page.
-      const drag = h('a', { class: 'button', href, onclick: (e: Event) => e.preventDefault() }, 'Price check');
-      wrap.replaceChildren(drag, copy);
-    })
-    .catch(() => status.replaceChildren('The bookmarklet appears here once the site is published.'));
-  return h('div', {}, wrap, status);
+    .then((code) => `javascript:${encodeURIComponent(code)}`);
+  return bookmarklet;
 }
 
-function steps(...items: (string | Node)[][]): HTMLElement {
-  return h('ol', { class: 'steps' }, items.map((parts) => h('li', {}, parts)));
+function copyBookmarkletButton(): HTMLElement {
+  const button = h('button', { type: 'button', class: 'button' }, 'Copy Price check');
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(await bookmarkletHref());
+      button.textContent = 'Copied ✓';
+    } catch {
+      button.textContent = 'Couldn\'t copy. Try again';
+    }
+  });
+  return button;
+}
+
+function dragBookmarkletButton(): HTMLElement {
+  // A javascript: link is the only way to hand over a bookmarklet; clicking it here does nothing.
+  const link = h('a', { class: 'button', href: '#', onclick: (e: Event) => e.preventDefault() }, 'Price check');
+  bookmarkletHref().then((href) => link.setAttribute('href', href), () => link.replaceWith('Not available until the site is published.'));
+  return link;
+}
+
+const strong = (text: string) => h('strong', {}, text);
+
+function setupSteps(platform: Platform): HTMLElement {
+  const steps = (...items: (string | Node)[][]) => h('ol', { class: 'steps' }, items.map((parts) => h('li', {}, parts)));
+  switch (platform) {
+    case 'ios-safari':
+      return h(
+        'div',
+        {},
+        steps(
+          ['Get the free Userscripts app.', h('br'), h('a', { class: 'button', href: USERSCRIPTS_APP, target: '_blank', rel: 'noopener' }, 'Open the App Store')],
+          ['Open ', strong('Settings → Apps → Safari → Extensions → Userscripts'), '. Turn it on and allow it on every website.'],
+          ['Come back here in Safari and tap below, then tap ', strong('aA'), ' in the address bar → ', strong('Userscripts'), ' → ', strong('Install'), '.', h('br'), h('a', { class: 'button', href: USERSCRIPT_URL }, 'Add Price check')],
+        ),
+        h('p', { class: 'done' }, 'Done. A red Price check button now appears on product pages. Tap it.'),
+      );
+    case 'ios-other':
+    case 'android':
+      return h(
+        'div',
+        {},
+        steps(
+          ['Tap to copy Price check.', h('br'), copyBookmarkletButton()],
+          ['Bookmark this page. Then edit that bookmark: name it ', strong('Price check'), ' and paste into its address, replacing what\'s there.'],
+        ),
+        h('p', { class: 'done' }, 'Done. On a product page, open your bookmarks and tap Price check.'),
+      );
+    case 'desktop':
+      return h(
+        'div',
+        {},
+        steps(['Drag this button to your bookmarks bar.', h('br'), dragBookmarkletButton()]),
+        h('p', { class: 'done' }, 'Done. On a product page, click Price check in your bookmarks bar.'),
+        h('p', { class: 'muted small' }, 'Can\'t see a bookmarks bar? Press Ctrl+Shift+B (Cmd+Shift+B on a Mac).'),
+      );
+  }
 }
 
 function priceCheckSection(): HTMLElement {
-  const install = (label: string) => h('a', { class: 'link', href: USERSCRIPT_URL }, label);
+  const nav = navigator as Navigator & { brave?: unknown };
+  let platform = detectPlatform(navigator.userAgent, navigator.maxTouchPoints, !!nav.brave);
+  const box = h('div', { class: 'setup' });
+  const picker = h(
+    'select',
+    {
+      'aria-label': 'Your device',
+      onchange: () => {
+        platform = picker.value as Platform;
+        render();
+      },
+    },
+    (Object.keys(PLATFORM_LABELS) as Platform[]).map((p) => h('option', { value: p }, PLATFORM_LABELS[p])),
+  );
+
+  function render(): void {
+    picker.value = platform;
+    box.replaceChildren(h('h3', {}, `Set it up: ${PLATFORM_LABELS[platform]}`), setupSteps(platform));
+  }
+  render();
+
   return h(
     'section',
     { id: 'price-check', 'aria-labelledby': 'price-check-h' },
@@ -381,62 +441,35 @@ function priceCheckSection(): HTMLElement {
     h(
       'p',
       {},
-      'Price check loads the product page you\'re on a second time as a signed-out visitor: same phone or computer, same internet connection, but no login or cookies. Then it tells you if the price is different.',
+      'On a product page, Price check loads the page again as if you were signed out, from the same phone and connection, and tells you if your price is higher.',
     ),
-    h(
-      'ul',
-      { class: 'verdicts' },
-      h('li', {}, h('strong', {}, 'You\'re seeing more: '), 'something tied to your account or cookies is raising your price.'),
-      h('li', {}, h('strong', {}, 'You\'re seeing less: '), 'usually a member or loyalty price.'),
-      h('li', {}, h('strong', {}, 'The price keeps changing: '), 'two signed-out checks disagreed, so the store is testing prices or changing them with demand.'),
-    ),
+    box,
+    h('details', { class: 'other-device' }, h('summary', {}, 'Different device or browser?'), picker),
     h(
       'details',
-      { class: 'install', open: true },
-      h('summary', {}, 'iPhone or iPad (Safari)'),
-      steps(
-        ['Install the free ', h('strong', {}, 'Userscripts'), ' app from the App Store and open it once.'],
-        ['In ', h('strong', {}, 'Settings → Apps → Safari → Extensions → Userscripts'), ', turn it on and allow it on every website.'],
-        ['In Safari, open ', install('Install Price check'), ', tap the ', h('strong', {}, 'aA'), ' (or puzzle-piece) button, choose ', h('strong', {}, 'Userscripts'), ' and tap ', h('strong', {}, 'Install'), '.'],
-        ['On a product page, tap the red ', h('strong', {}, 'Price check'), ' button in the corner.'],
-      ),
-      h('p', { class: 'muted small' }, 'Brave and other iPhone browsers can\'t run userscripts; use the bookmarklet below.'),
-    ),
-    h(
-      'details',
-      { class: 'install' },
-      h('summary', {}, 'Computer (Chrome, Firefox, Edge, Safari)'),
-      steps(
-        ['Install the free ', h('strong', {}, 'Tampermonkey'), ' or ', h('strong', {}, 'Violentmonkey'), ' extension for your browser.'],
-        ['Open ', install('Install Price check'), ' and confirm.'],
-        ['On a product page, click the red ', h('strong', {}, 'Price check'), ' button in the corner.'],
-      ),
-    ),
-    h(
-      'details',
-      { class: 'install' },
-      h('summary', {}, 'Any browser, no install (bookmarklet)'),
-      steps(
-        ['On a computer, drag the red ', h('strong', {}, 'Price check'), ' button below to your bookmarks bar.'],
-        ['On a phone, tap ', h('strong', {}, 'Copy bookmarklet'), ', bookmark any page, then edit that bookmark: name it "Price check" and replace its address with what you copied.'],
-        ['On a product page, open your bookmarks and tap ', h('strong', {}, 'Price check'), '. In Brave or Chrome you can also type "Price check" in the address bar and pick the bookmark.'],
-      ),
-      bookmarkletControls(),
-    ),
-    h(
-      'aside',
-      { class: 'myths' },
-      h('h3', {}, 'What it can\'t see'),
+      { class: 'about' },
+      h('summary', {}, 'What the results mean'),
       h(
         'ul',
-        {},
-        h('li', {}, h('strong', {}, 'Apps. '), h('span', {}, 'Uber, Lyft and the Instacart and DoorDash apps can\'t be checked. Use a second quote from someone else\'s phone.')),
-        h('li', {}, h('strong', {}, 'Sites that hide prices until you sign in, '), h('span', {}, 'like Instacart\'s website, or that load prices later with scripts.')),
-        h('li', {}, h('strong', {}, 'Device and location pricing. '), h('span', {}, 'Both checks come from your device and connection. Compare on another device for those.')),
-        h('li', {}, h('strong', {}, 'Stores that block automated requests. '), h('span', {}, 'You\'ll see a message saying so.')),
+        { class: 'verdicts' },
+        h('li', {}, strong('You\'re seeing more: '), 'something tied to your account or cookies is raising your price.'),
+        h('li', {}, strong('You\'re seeing less: '), 'usually a member or loyalty price.'),
+        h('li', {}, strong('The price keeps changing: '), 'the store is testing prices or changing them with demand.'),
       ),
     ),
-    h('p', { class: 'muted small' }, 'Private by design: nothing is sent to this site or anyone else. The only extra request goes to the store you\'re already on.'),
+    h(
+      'details',
+      { class: 'about' },
+      h('summary', {}, 'What it can\'t check'),
+      h(
+        'ul',
+        { class: 'verdicts' },
+        h('li', {}, strong('Apps'), ' like Uber, Lyft, Instacart and DoorDash. Ask someone else to price it on their phone.'),
+        h('li', {}, strong('Sites that hide prices until you sign in'), ', like Instacart\'s website.'),
+        h('li', {}, strong('Device and location pricing.'), ' Both checks come from your device and connection.'),
+      ),
+      h('p', { class: 'muted small' }, 'Private: nothing is sent to this site or anyone else. The only extra request goes to the store you\'re on.'),
+    ),
   );
 }
 

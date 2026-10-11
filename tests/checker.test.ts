@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { fetchAnonymous } from '../checker/check';
 import { compare, describe as describeVerdict, money } from '../checker/compare';
 import { extractPrice, parsePrice } from '../checker/extract';
+import { detectPlatform } from '../src/platform';
 
 const page = (head: string, body = '') => new DOMParser().parseFromString(`<html><head>${head}</head><body>${body}</body></html>`, 'text/html');
 const ld = (data: unknown) => `<script type="application/ld+json">${JSON.stringify(data)}</script>`;
@@ -102,5 +103,24 @@ describe('fetchAnonymous', () => {
     expect((await fetchAnonymous('u', async () => new Response('', { status: 403 }))).failure).toMatch(/blocked/);
     expect((await fetchAnonymous('u', async () => new Response('<html></html>'))).failure).toMatch(/doesn't include a price/);
     expect((await fetchAnonymous('u', async () => Promise.reject(new TypeError('net')))).failure).toMatch(/refused/);
+  });
+});
+
+describe('detectPlatform', () => {
+  const IPHONE_SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
+  const IPHONE_CHROME = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/130.0 Mobile/15E148 Safari/604.1';
+  const IPAD_DESKTOP = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15';
+  const ANDROID = 'Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Mobile Safari/537.36';
+
+  it('tells Safari on iPhone from other iPhone browsers, including Brave', () => {
+    expect(detectPlatform(IPHONE_SAFARI)).toBe('ios-safari');
+    expect(detectPlatform(IPHONE_CHROME)).toBe('ios-other');
+    expect(detectPlatform(IPHONE_SAFARI, 5, true)).toBe('ios-other');
+  });
+
+  it('spots iPads asking for desktop sites, Android and computers', () => {
+    expect(detectPlatform(IPAD_DESKTOP, 5)).toBe('ios-safari');
+    expect(detectPlatform(IPAD_DESKTOP, 0)).toBe('desktop');
+    expect(detectPlatform(ANDROID)).toBe('android');
   });
 });

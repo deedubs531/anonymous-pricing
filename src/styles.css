@@ -598,6 +598,58 @@ nav a {
 
 /* Check a price */
 
+.setup {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 0.75rem;
+}
+
+.setup h3 {
+  font-size: 1.1rem;
+}
+
+.steps {
+  padding-left: 1.3rem;
+  margin: 0.75rem 0 0;
+}
+
+.steps li + li {
+  margin-top: 0.9rem;
+}
+
+.steps .button {
+  margin-top: 0.5rem;
+  border: 0;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.done {
+  margin-top: 1rem;
+  font-weight: 600;
+  color: var(--active);
+}
+
+.other-device,
+.about {
+  margin-top: 0.75rem;
+}
+
+.other-device select {
+  font: inherit;
+  color: inherit;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
+  min-height: 2.5rem;
+  margin-top: 0.5rem;
+  max-width: 100%;
+}
+
 .verdicts {
   padding-left: 1.2rem;
   color: var(--ink-2);
@@ -605,36 +657,4 @@ nav a {
 
 .verdicts li + li {
   margin-top: 0.3rem;
-}
-
-.install {
-  background: var(--card);
-  border: 1px solid var(--rule);
-  border-radius: 10px;
-  padding: 0.6rem 1rem;
-  margin-top: 0.6rem;
-}
-
-.install summary {
-  color: var(--ink);
-}
-
-.steps {
-  padding-left: 1.3rem;
-  margin: 0.5rem 0;
-}
-
-.steps li + li {
-  margin-top: 0.4rem;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.row .button {
-  margin-top: 0;
 }
