@@ -658,3 +658,10 @@ nav a {
 .verdicts li + li {
   margin-top: 0.3rem;
 }
+
+.callout {
+  background: var(--card);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 0.6rem 0.85rem;
+}

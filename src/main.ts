@@ -437,7 +437,15 @@ function priceCheckSection(): HTMLElement {
   return h(
     'section',
     { id: 'price-check', 'aria-labelledby': 'price-check-h' },
-    h('h2', { id: 'price-check-h' }, 'Check a price'),
+    h('h2', { id: 'price-check-h' }, 'Check a website'),
+    h(
+      'p',
+      { class: 'callout' },
+      h('strong', {}, 'Uber, Lyft, Instacart or DoorDash? '),
+      'Apps can\'t be checked from a browser. Use the ',
+      h('a', { class: 'link', href: './app-check/' }, 'two-account check'),
+      ' instead.',
+    ),
     h(
       'p',
       {},
@@ -464,7 +472,7 @@ function priceCheckSection(): HTMLElement {
       h(
         'ul',
         { class: 'verdicts' },
-        h('li', {}, strong('Apps'), ' like Uber, Lyft, Instacart and DoorDash. Ask someone else to price it on their phone.'),
+        h('li', {}, strong('Apps'), ' like Uber, Lyft, Instacart and DoorDash. Use the ', h('a', { class: 'link', href: './app-check/' }, 'two-account check'), '.'),
         h('li', {}, strong('Sites that hide prices until you sign in'), ', like Instacart\'s website.'),
         h('li', {}, strong('Device and location pricing.'), ' Both checks come from your device and connection.'),
       ),
@@ -507,7 +515,8 @@ function render(root: HTMLElement): void {
         { 'aria-label': 'Sections' },
         [
           ['#what-you-can-do', 'What you can do'],
-          ['#price-check', 'Check a price'],
+          ['./app-check/', 'Check an app'],
+          ['#price-check', 'Check a website'],
           ['#rights', 'Your rights'],
           ['#companies', 'Companies'],
           ['#laws', 'Laws'],

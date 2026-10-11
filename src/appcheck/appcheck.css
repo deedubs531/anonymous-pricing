@@ -1,0 +1,160 @@
+/* Two-account check */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.check-card > h3 {
+  margin-bottom: 0.5rem;
+}
+
+.check-card > p {
+  margin-top: 0.75rem;
+}
+
+.sides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 40rem) {
+  .sides {
+    grid-template-columns: 1fr;
+  }
+}
+
+.side {
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 0.85rem;
+}
+
+.side h3 {
+  font-size: 1.05rem;
+}
+
+.side .row {
+  margin-top: 0.5rem;
+}
+
+.side .button {
+  margin-top: 0;
+  cursor: pointer;
+}
+
+.side input[type='text'],
+.wide {
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 0.45rem 0.7rem;
+  min-height: 2.6rem;
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.wide {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+}
+
+.side .chips {
+  margin-top: 0.4rem;
+}
+
+.side .done {
+  margin-top: 0.6rem;
+}
+
+.result {
+  margin-top: 1rem;
+  border-top: 3px double var(--rule);
+  padding-top: 0.9rem;
+}
+
+.result h3 {
+  font-size: 1.3rem;
+}
+
+.result.bad h3,
+.bad-text {
+  color: var(--measured);
+}
+
+.result.good h3 {
+  color: var(--active);
+}
+
+.result label {
+  display: block;
+  margin-top: 0.75rem;
+}
+
+.result .row {
+  margin-top: 0.75rem;
+}
+
+.result .row .button {
+  margin-top: 0;
+  border: 0;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.pairs {
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.pairs th,
+.pairs td {
+  text-align: left;
+  padding: 0.2rem 0.75rem 0.2rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.check-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.check-list li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.92rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.plain {
+  font: inherit;
+  background: none;
+  border: 0;
+  color: var(--ink-3);
+  cursor: pointer;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+}
+
+#my-checks .row .button {
+  border: 0;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}

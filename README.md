@@ -13,7 +13,11 @@ educational resource on it:
 - **Companies:** Instacart, Uber, Lyft, DoorDash, Target, Kroger, JetBlue, Tinder and others, tagged **Tested**
   (independent testers saw different prices), **Admitted** (the company disclosed or confirmed it) or
   **Investigated** (a regulator, lawmaker or lawsuit), with the company's response and sources.
-- **Check a price:** a free tool that loads the product page you're on again as a signed-out visitor
+- **Two-account check** (`/app-check/`): for apps like Uber, Lyft, Instacart and DoorDash. You price the
+  same ride or cart on your own account and on a clean second account (in a private tab) at the same
+  time, add both screenshots, and it reads the prices on the phone, shows the difference, and keeps a
+  log with the pattern and a report you can share. Screenshots never leave the phone.
+- **Check a website:** a free tool that loads the product page you're on again as a signed-out visitor
   (same device and connection, no login or cookies) and tells you if your price is higher, lower, the
   same, or changing on its own. Installs as a userscript (iPhone Safari via the Userscripts app,
   Tampermonkey or Violentmonkey on a computer) or a bookmarklet in any browser. Nothing is sent
@@ -29,6 +33,8 @@ No accounts or tracking. The only thing stored is your chosen state, in your own
 | `src/data.ts` | Companies, evidence, laws, pricing vendors. Update `REVIEWED` when you recheck sources. |
 | `src/guide.ts` | Tips, "I'm about to…" scenarios, myths, states, Global Privacy Control states, where to report |
 | `checker/` | Price check: reading prices from structured data (`extract.ts`), the signed-out fetch (`check.ts`), verdicts (`compare.ts`), the on-page card (`ui.ts`) |
+| `src/appcheck/` | Two-account check: apps (`apps.ts`), reading prices from screenshot text (`prices.ts`), on-device OCR (`ocr.ts`), saved checks (`store.ts`, `log.ts`), the page (`main.ts`) |
+| `scripts/copy-ocr.mjs` | Copies the OCR engine and English data into `dist/ocr/`, so screenshots are read without any outside server |
 | `scripts/build-checker.mjs` | Builds `price-check.js` (bookmarklet) and `price-check.user.js` (userscript) into `dist/` |
 
 Price check reads prices from the schema.org, microdata and Open Graph data stores publish for
@@ -44,7 +50,7 @@ law names real states.
 
 ```sh
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173 (screenshot reading needs a build: npm run build && npm run preview)
 npm test
 npm run build      # type check + production build into dist/
 ```
