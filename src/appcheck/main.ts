@@ -7,6 +7,33 @@ import { gapSeconds, pattern, patternSentence, percentOver, reportText } from '.
 import { readText } from './ocr';
 import { findPrices, matchLabel, pairByLabel, pickDefault, type PriceCandidate } from './prices';
 import { allChecks, deleteCheck, saveCheck, type StoredCheck } from './store';
+import { API_URL } from '../../shared/config';
+import { installId, submit } from '../../shared/submit';
+
+/** Adds this check to the public totals: the app, the option, both prices and the time between them. */
+function shareButton(): HTMLElement | '' {
+  const { app, mine, clean } = state;
+  if (!API_URL || mine.price === undefined || clean.price === undefined || mine.at === undefined || clean.at === undefined) return '';
+  const option = mine.picked !== undefined ? mine.candidates[mine.picked]?.label : undefined;
+  const button = h('button', { type: 'button', class: 'chip' }, 'Share anonymously');
+  button.addEventListener('click', async () => {
+    button.setAttribute('disabled', '');
+    button.textContent = 'Sharing…';
+    const result = await submit({
+      kind: 'app',
+      source: 'app-check',
+      app: app.id,
+      option,
+      mine: mine.price!,
+      baseline: clean.price!,
+      baselineType: 'clean-account',
+      gapSeconds: gapSeconds({ mineAt: mine.at!, cleanAt: clean.at! }),
+      install: installId(localStorage),
+    });
+    button.textContent = result.message;
+  });
+  return button;
+}
 
 interface Side {
   price?: number;
@@ -185,6 +212,7 @@ function resultPanel(): HTMLElement | null {
         },
         'Save to my checks',
       ),
+      shareButton(),
       h('button', { type: 'button', class: 'chip', onclick: () => (Object.assign(state, { label: '', mine: emptySide(), clean: emptySide() }), render()) }, 'Start over'),
     ),
   );
@@ -335,7 +363,7 @@ function page(): HTMLElement {
     ),
     h('section', { 'aria-labelledby': 'check-h' }, h('h2', { id: 'check-h' }, 'New check'), checkCard),
     logSection,
-    h('footer', {}, h('p', {}, 'Private: screenshots are read on this phone and saved only here. Nothing is uploaded.')),
+    h('footer', {}, h('p', {}, 'Private: screenshots are read on this phone and saved only here. If you tap Share anonymously, only the app, the option (e.g. UberX), the two prices and the seconds between them are sent: never screenshots, places or accounts.')),
   );
 }
 

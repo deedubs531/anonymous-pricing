@@ -1,0 +1,25 @@
+/* Popup and welcome page. Same palette as the site. */
+:root {
+  --bg: #f4f3ef; --card: #fff; --ink: #1d1f22; --ink-2: #4a4f56; --ink-3: #767c84; --rule: #dddad2;
+  --accent: #b4361f; --good: #2f6b3a; --warn: #8a5a00;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181b; --card: #1f2226; --ink: #eceae5; --ink-2: #c0c3c8; --ink-3: #8d939b; --rule: #33373d;
+    --accent: #f08a72; --good: #82c38f; --warn: #e3b35a; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+h1, h2 { font-family: 'Iowan Old Style', Palatino, Georgia, serif; margin: 0 0 .4rem; line-height: 1.2; }
+p { margin: .3rem 0; }
+a { color: var(--accent); }
+.muted { color: var(--ink-3); font-size: 12.5px; }
+.toggle { display: flex; gap: .6rem; align-items: flex-start; padding: .6rem 0; border-bottom: 1px solid var(--rule); cursor: pointer; }
+.toggle input { width: 1.1rem; height: 1.1rem; margin-top: .15rem; accent-color: var(--accent); flex: none; }
+.toggle span { display: grid; }
+button { font: inherit; border-radius: 8px; padding: .5rem .9rem; border: 1px solid var(--rule); background: var(--card); color: var(--ink); cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 650; }
+ul.history { list-style: none; padding: 0; margin: .4rem 0; }
+ul.history li { display: grid; grid-template-columns: 1fr auto; gap: .5rem; padding: .4rem 0; border-bottom: 1px solid var(--rule); }
+.higher { color: var(--accent); font-weight: 650; } .lower { color: var(--good); font-weight: 650; } .unstable { color: var(--warn); }
+.recent { font-size: 1.05rem; margin-top: 1rem; }

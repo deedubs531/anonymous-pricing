@@ -2,8 +2,23 @@
 import { fetchAnonymous, type AnonResult } from './check';
 import { compare, describe, money, type Verdict } from './compare';
 import { extractPrice, parsePrice, type PriceInfo } from './extract';
+import type { WebObservation } from '../shared/observation';
 
-export const SITE_URL = 'https://deedubs531.github.io/anonymous-pricing/';
+/** A finished check of the current page. */
+export interface PageCheck {
+  verdict: Verdict;
+  mine?: PriceInfo;
+  anon: AnonResult;
+}
+
+/** What a tool shares: the check without who sent it (the sender adds its install ID and source). */
+export type ObservationDraft = Omit<WebObservation, 'install' | 'source'>;
+
+/** Sends a check to the shared totals; resolves to a short message for the button. */
+export type Sharer = (draft: ObservationDraft) => Promise<string>;
+
+import { SITE_URL } from '../shared/config';
+export { SITE_URL };
 const HOST_ID = 'who-pays-more-price-check';
 
 const CSS = `
@@ -65,7 +80,22 @@ function summary(v: Verdict, currency: string | undefined, name: string | undefi
   }
 }
 
-function showResult(root: ShadowRoot, v: Verdict, mine: PriceInfo | undefined, anon: AnonResult): void {
+/** The shareable form of a check, if it produced a comparison. */
+export function toDraft(check: PageCheck, url: Location | URL = location): ObservationDraft | undefined {
+  const v = check.verdict;
+  if (v.kind !== 'higher' && v.kind !== 'lower' && v.kind !== 'same' && v.kind !== 'unstable') return undefined;
+  return {
+    kind: 'web',
+    site: url.hostname,
+    path: url.pathname,
+    name: check.mine?.name ?? check.anon.info?.name,
+    currency: check.mine?.currency ?? check.anon.info?.currency,
+    mine: v.mine,
+    anon: check.anon.prices,
+  };
+}
+
+function showResult(root: ShadowRoot, v: Verdict, mine: PriceInfo | undefined, anon: AnonResult, share?: Sharer): void {
   const currency = mine?.currency ?? anon.info?.currency;
   const name = mine?.name ?? anon.info?.name;
   const text = describe(v, currency);
@@ -74,7 +104,7 @@ function showResult(root: ShadowRoot, v: Verdict, mine: PriceInfo | undefined, a
     const input = el('input', { inputMode: 'decimal', placeholder: 'e.g. 24.99', ariaLabel: 'Price you see' });
     const submit = () => {
       const typed = parsePrice(input.value);
-      if (typed !== undefined) showResult(root, compare(typed, anon.prices), { price: typed, currency, name, via: 'meta' }, anon);
+      if (typed !== undefined) showResult(root, compare(typed, anon.prices), { price: typed, currency, name, via: 'meta' }, anon, share);
     };
     input.addEventListener('keydown', (e) => e.key === 'Enter' && submit());
     card(root, 'neutral', el('h2', {}, text.title), el('p', {}, text.body), el('div', { className: 'row' }, input, el('button', { className: 'primary', onclick: submit }, 'Compare'), el('button', { onclick: close }, 'Close')));
@@ -82,6 +112,15 @@ function showResult(root: ShadowRoot, v: Verdict, mine: PriceInfo | undefined, a
     return;
   }
 
+  const draft = share && toDraft({ verdict: v, mine, anon });
+  const shareButton = draft ? el('button', { className: 'primary' }, 'Share anonymously') : '';
+  if (shareButton && draft && share) {
+    shareButton.onclick = async () => {
+      shareButton.disabled = true;
+      shareButton.textContent = 'Sharing…';
+      shareButton.textContent = await share(draft);
+    };
+  }
   const copy = el('button', {}, 'Copy result');
   copy.onclick = async () => {
     try {
@@ -98,14 +137,12 @@ function showResult(root: ShadowRoot, v: Verdict, mine: PriceInfo | undefined, a
     el('p', {}, text.body),
     name ? el('p', { className: 'muted' }, name) : '',
     el('p', { className: 'muted' }, 'Compares your signed-in view with a signed-out one from the same device and connection. It can\'t see differences by device, location or in apps. ', el('a', { href: `${SITE_URL}#price-check`, target: '_blank', rel: 'noopener' }, 'What this means')),
-    el('div', { className: 'row' }, copy, el('button', { onclick: () => void runPriceCheck() }, 'Check again'), el('button', { onclick: close }, 'Close')),
+    el('div', { className: 'row' }, shareButton, copy, el('button', { onclick: () => void runPriceCheck(share) }, 'Check again'), el('button', { onclick: close }, 'Close')),
   );
 }
 
-/** Runs the full check on the current page and shows the result. */
-export async function runPriceCheck(): Promise<Verdict> {
-  const root = mount();
-  card(root, 'neutral', el('h2', {}, 'Checking…'), el('p', { className: 'muted' }, 'Loading this page again as a signed-out visitor.'));
+/** Checks the current page without showing anything. */
+export async function checkPage(): Promise<PageCheck> {
   const mine = extractPrice(document);
   const anon = await fetchAnonymous(location.href);
   let verdict = compare(mine?.price, anon.prices, anon.failure);
@@ -113,6 +150,19 @@ export async function runPriceCheck(): Promise<Verdict> {
   if (mine?.currency && a && mine.currency !== a && verdict.kind !== 'no-anon') {
     verdict = { kind: 'no-anon', mine: mine.price, reason: `Signed out, the store showed a different currency (${a} instead of ${mine.currency}), so the prices can't be compared.` };
   }
-  showResult(root, verdict, mine, anon);
-  return verdict;
+  return { verdict, mine, anon };
+}
+
+/** Shows a finished check in the card. */
+export function showCheck(check: PageCheck, share?: Sharer): void {
+  showResult(mount(), check.verdict, check.mine, check.anon, share);
+}
+
+/** Runs the full check on the current page and shows the result. */
+export async function runPriceCheck(share?: Sharer): Promise<Verdict> {
+  const root = mount();
+  card(root, 'neutral', el('h2', {}, 'Checking…'), el('p', { className: 'muted' }, 'Loading this page again as a signed-out visitor.'));
+  const check = await checkPage();
+  showResult(root, check.verdict, check.mine, check.anon, share);
+  return check.verdict;
 }

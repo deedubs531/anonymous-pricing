@@ -1,21 +1,26 @@
 {
   "name": "anonymous-pricing",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Who's been caught charging different people different prices, what to do before you pay, and your rights by state.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build && node scripts/build-checker.mjs && node scripts/copy-ocr.mjs",
+    "build": "tsc --noEmit && vite build && node scripts/build-checker.mjs && node scripts/copy-ocr.mjs && node scripts/build-extension.mjs",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "api:dev": "wrangler d1 migrations apply DB --local -c worker/wrangler.jsonc && wrangler dev -c worker/wrangler.jsonc",
+    "api:deploy": "wrangler d1 migrations apply DB --remote -c worker/wrangler.jsonc && wrangler deploy -c worker/wrangler.jsonc"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261013.1",
+    "@types/chrome": "^0.3.5",
     "jsdom": "^29.1.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.3",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "wrangler": "^4.149.0"
   },
   "dependencies": {
     "@tesseract.js-data/eng": "^1.0.0",

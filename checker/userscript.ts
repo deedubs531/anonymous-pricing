@@ -1,6 +1,10 @@
 // Userscript entry: shows a small "Price check" button on pages that publish a product price.
+import { API_URL } from '../shared/config';
+import { installId, submit } from '../shared/submit';
 import { extractPrice } from './extract';
-import { runPriceCheck } from './ui';
+import { runPriceCheck, type Sharer } from './ui';
+
+const share: Sharer = async (draft) => (await submit({ ...draft, source: 'userscript', install: installId(localStorage) })).message;
 
 const BUTTON_ID = 'who-pays-more-price-button';
 
@@ -17,7 +21,7 @@ function button(): HTMLButtonElement {
   );
   b.addEventListener('click', () => {
     b.remove();
-    void runPriceCheck();
+    void runPriceCheck(API_URL ? share : undefined);
   });
   return b;
 }

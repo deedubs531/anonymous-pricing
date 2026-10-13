@@ -1,0 +1,16 @@
+// Cloudflare Worker for the Who Pays More API. See README "Turn on sharing" for setup.
+{
+  "name": "who-pays-more-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "who-pays-more",
+      // Paste the ID Cloudflare shows after you create the "who-pays-more" D1 database.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "observability": { "enabled": false }
+}

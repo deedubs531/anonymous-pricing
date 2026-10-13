@@ -1,0 +1,342 @@
+/* Dashboard charts. Diverging pair blue (lower) ↔ red (higher) with a gray midpoint (same),
+   validated for colour-blind separation in both modes; the gray midpoint is backed by the
+   legend, tooltips and table views. */
+
+.viz-root {
+  --viz-surface: #ffffff;
+  --viz-lower: #2a78d6;
+  --viz-same: #c9c7bd;
+  --viz-higher: #e34948;
+  --viz-other: #c9c7bd;
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme='light'])) .viz-root {
+    --viz-surface: #1f2226;
+    --viz-lower: #3987e5;
+    --viz-same: #55534e;
+    --viz-higher: #e66767;
+    --viz-other: #55534e;
+    --viz-grid: #2c2c2a;
+    --viz-axis: #383835;
+  }
+}
+
+:root[data-theme='dark'] .viz-root {
+  --viz-surface: #1f2226;
+  --viz-lower: #3987e5;
+  --viz-same: #55534e;
+  --viz-higher: #e66767;
+  --viz-other: #55534e;
+  --viz-grid: #2c2c2a;
+  --viz-axis: #383835;
+}
+
+/* Hero and stat tiles */
+
+.hero {
+  margin-top: 1.5rem;
+}
+
+.hero-value {
+  font: 650 3.5rem/1 var(--sans);
+  letter-spacing: -0.02em;
+}
+
+.hero-label {
+  font-size: 1.05rem;
+  color: var(--ink-2);
+  max-width: 30rem;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 34rem) {
+  .tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.tile {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+}
+
+.tile span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--ink-3);
+}
+
+.tile strong {
+  font: 650 1.6rem/1.2 var(--sans);
+}
+
+/* Chart cards */
+
+.chart {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 1rem;
+  margin: 0.75rem 0 0;
+}
+
+.chart figcaption {
+  font-size: 0.9rem;
+  color: var(--ink-2);
+  margin-bottom: 0.6rem;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.legend li::before {
+  content: '';
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 3px;
+  margin-right: 0.35rem;
+  vertical-align: -0.1rem;
+  background: var(--swatch);
+}
+
+/* 100% stacked bars, one row per site or app */
+
+.bars {
+  display: grid;
+  grid-template-columns: minmax(6rem, 11rem) 1fr 3.4rem;
+  align-items: center;
+  gap: 0.55rem 0.75rem;
+}
+
+.bars .name {
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
+.bars .name small {
+  display: block;
+  color: var(--ink-3);
+  font-size: 0.78rem;
+}
+
+.track {
+  display: flex;
+  gap: 2px;
+  height: 18px;
+}
+
+.seg {
+  min-width: 2px;
+  height: 100%;
+  cursor: default;
+  outline-offset: 2px;
+}
+
+.seg:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.seg:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.seg:only-child {
+  border-radius: 4px;
+}
+
+.seg:hover,
+.seg:focus-visible {
+  filter: brightness(1.12);
+}
+
+.bars .value {
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Weekly columns */
+
+.columns {
+  display: grid;
+  grid-template-columns: 2.2rem 1fr;
+  gap: 0 0.4rem;
+}
+
+.y-axis {
+  position: relative;
+  height: 160px;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.y-axis span {
+  position: absolute;
+  right: 0;
+  transform: translateY(50%);
+}
+
+.plot {
+  position: relative;
+  height: 160px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  border-bottom: 1px solid var(--viz-axis);
+}
+
+.gridline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--viz-grid);
+  pointer-events: none;
+}
+
+.col {
+  flex: 1;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100%;
+  gap: 2px;
+  position: relative;
+  outline-offset: 2px;
+}
+
+.col > i {
+  display: block;
+  width: min(100%, 24px);
+}
+
+.col > i:last-child {
+  border-radius: 4px 4px 0 0;
+}
+
+.col:hover > i,
+.col:focus-visible > i {
+  filter: brightness(1.12);
+}
+
+.x-axis {
+  grid-column: 2;
+  display: flex;
+  gap: 2px;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  margin-top: 0.3rem;
+}
+
+.x-axis span {
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+/* Tooltip and table views */
+
+.viz-tooltip {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  max-width: 16rem;
+}
+
+.viz-tooltip strong {
+  font-size: 1rem;
+}
+
+.table-view {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.table-view summary {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.5rem;
+}
+
+.data th,
+.data td {
+  text-align: left;
+  padding: 0.35rem 0.5rem 0.35rem 0;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+.data th {
+  color: var(--ink-3);
+  font-weight: 600;
+}
+
+.data td.num,
+.data th.num {
+  text-align: right;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.empty-state {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+/* Phones: name above its bar, so the bar gets the full width. */
+@media (max-width: 34rem) {
+  .bars {
+    grid-template-columns: 1fr 3.2rem;
+    row-gap: 0.3rem;
+  }
+
+  .bars .name {
+    grid-column: 1 / -1;
+    margin-top: 0.35rem;
+  }
+
+  .bars > span:first-child {
+    display: none;
+  }
+}

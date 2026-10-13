@@ -405,9 +405,26 @@ function setupSteps(platform: Platform): HTMLElement {
       return h(
         'div',
         {},
-        steps(['Drag this button to your bookmarks bar.', h('br'), dragBookmarkletButton()]),
-        h('p', { class: 'done' }, 'Done. On a product page, click Price check in your bookmarks bar.'),
-        h('p', { class: 'muted small' }, 'Can\'t see a bookmarks bar? Press Ctrl+Shift+B (Cmd+Shift+B on a Mac).'),
+        h('p', {}, 'The Who Pays More extension checks product pages on its own and, if you choose, adds your results to the ', h('a', { class: 'link', href: './dashboard/' }, 'public findings'), '.'),
+        steps(
+          ['Download the extension and unzip it.', h('br'), h('a', { class: 'button', href: './extension/who-pays-more-chrome.zip' }, 'Download for Chrome, Edge or Brave')],
+          ['Open ', strong('chrome://extensions'), ' (or edge://extensions, brave://extensions) and turn on ', strong('Developer mode'), ' in the top corner.'],
+          ['Click ', strong('Load unpacked'), ' and choose the unzipped folder.'],
+        ),
+        h('p', { class: 'done' }, 'Done. A welcome page opens; on product pages a small badge shows if your price is different.'),
+        h(
+          'details',
+          { class: 'about' },
+          h('summary', {}, 'Firefox, or can\'t install extensions?'),
+          h(
+            'p',
+            { class: 'small' },
+            'Firefox: open about:debugging → This Firefox → Load Temporary Add-on, and pick ',
+            h('a', { class: 'link', href: './extension/who-pays-more-firefox.zip' }, 'the Firefox download'),
+            ' (it lasts until Firefox restarts, until it\'s listed on Mozilla\'s add-ons site). Anywhere else, drag this button to your bookmarks bar and click it on a product page:',
+          ),
+          dragBookmarkletButton(),
+        ),
       );
   }
 }
@@ -516,6 +533,7 @@ function render(root: HTMLElement): void {
         [
           ['#what-you-can-do', 'What you can do'],
           ['./app-check/', 'Check an app'],
+          ['./dashboard/', 'Findings'],
           ['#price-check', 'Check a website'],
           ['#rights', 'Your rights'],
           ['#companies', 'Companies'],

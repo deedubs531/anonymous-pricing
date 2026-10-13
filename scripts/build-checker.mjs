@@ -11,6 +11,7 @@ async function bundle(entry, fileName) {
   await build({
     configFile: false,
     logLevel: 'warn',
+    define: { __API_URL__: JSON.stringify(process.env.API_URL ?? '') },
     build: {
       outDir: 'dist',
       emptyOutDir: false,
